@@ -241,7 +241,7 @@ vtkMatrix4x4* vtkCollisionDetectionFilter::GetMatrix(int i)
 
 static int ComputeCollisions(vtkOBBNode *nodeA, vtkOBBNode *nodeB, vtkMatrix4x4 *Xform, void *clientdata)
 {
-  // This is hard-coded for triangles but could be easily changed to allow for allow n-sided polygons
+  // This is hard-coded for triangles but could be easily changed to allow for allow n-sided convex polygons
   int numIdsA, numIdsB;
   vtkIdList *IdsA, *IdsB, *pointIdsA, *pointIdsB;
   vtkCellArray *cells;
@@ -596,6 +596,7 @@ int vtkCollisionDetectionFilter::RequestData(
 
 }
 
+// This method is a modified version of vtkPolygon::IntersectPolygonWithPolygon
 // Method intersects two polygons. You must supply the number of points and
 // point coordinates (npts, *pts) and the bounding box (bounds) of the two
 // polygons. Also supply a tolerance squared for controlling
@@ -616,8 +617,7 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
   x[0] = x1;
   x[1] = x2;
 
-  //  Intersect each edge of first polygon against second
-  //
+  //  Intersect each edge of first polygon against second polygon
   vtkPolygon::ComputeNormal(npts2, pts2, n2);
   vtkPolygon::ComputeNormal(npts, pts, n);
 
@@ -631,13 +631,19 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
       {
       ray[j] = p2[j] - p1[j];
       }
+
+    // if the edge (ray) of the 1st polygon doesn't hit the bounding box
+    // of the 2nd polygon - move on to next edge.
     if ( ! vtkBox::IntersectBox(bounds2, p1, ray, coords, t) )
       {
       continue;
       }
 
+    // test if edge hits the infinite plane in which the 2nd polygon lies
     if ( (vtkPlane::IntersectWithLine(p1,p2,n2,pts2,t,x[Num])) == 1 ) 
       {
+      // test if the point of intersection with infinite plane is inside
+      // 2nd polygon... is so we have an intersection.
       if ( (npts2==3
             && vtkTriangle::PointInTriangle(x[Num],pts2,pts2+3,pts2+6,tol2))
            || (npts2>3
@@ -645,6 +651,8 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
                == 1))
         {
         Num++;
+        // it's possible that 2 edges pass through the 2nd polygon. Check if
+        // we need both and return 1, meaning a collision was found.
         if (CollisionMode != vtkCollisionDetectionFilter::VTK_ALL_CONTACTS ||
           Num == 2)
           {
@@ -652,7 +660,8 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
           }
         }
       } 
-    else
+    else // the polygon aren't intersecting but they may be just touching
+        // (ie) coplanar and overlapping
       {
        // cout << "Test for overlapping" << endl;
        // test to see if cells are coplanar and overlapping...
@@ -670,11 +679,12 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
           {
           //cout << "cells are coplanar" << endl;
           // test to see if coplanar cells overlap
-          // ie, if one of the tris has a vertex in the other
+          // ie, if any edges intersect each other.
           for (int ii=0; ii < npts; ii++)
             {
             for (int jj=0; jj < npts2; jj++)
               {
+              // Do these 2 edges intersect (=2)
               if (vtkLine::Intersection(pts+3*ii,pts+3*((ii+1)%npts),
               pts2+3*jj,pts2+3*((jj+1)%npts2),u,v) == 2)
                 {
@@ -698,7 +708,8 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
         } // end else
      }
        
-       
+  //  We've checked if the first polygon has intersecting edges and if the two
+  //  polygons are overlapping now check if the 2nd polygon has
   //  Intersect each edge of second polygon against first
   //
 
