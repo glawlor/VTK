@@ -14,6 +14,7 @@
 #include "vtkCommand.h"
 #include "vtkTestUtilities.h"
 #include "vtkRegressionTestImage.h"
+#include "vtkSmartPointer.h"
 #include <ostream>
 
 
@@ -54,20 +55,25 @@ protected:
 
 int TestCollisionDetection(int argc, char* argv[])
 {
-   vtkSphereSource *sphere0 = vtkSphereSource::New();
+   vtkSmartPointer<vtkSphereSource> sphere0 =
+       vtkSmartPointer<vtkSphereSource>::New();
    sphere0->SetPhiResolution(3);
    sphere0->SetThetaResolution(3);
    sphere0->SetCenter(-0.0, 0, 0);
 
-   vtkSphereSource *sphere1 = vtkSphereSource::New();
+   vtkSmartPointer<vtkSphereSource> sphere1 =
+       vtkSmartPointer<vtkSphereSource>::New();
    sphere1->SetPhiResolution(30);
    sphere1->SetThetaResolution(30);
    sphere1->SetRadius(0.3);
 
-   vtkMatrix4x4 *matrix0 = vtkMatrix4x4::New();
-   vtkMatrix4x4 *matrix1 = vtkMatrix4x4::New();
+   vtkSmartPointer<vtkMatrix4x4> matrix0 =
+       vtkSmartPointer<vtkMatrix4x4>::New();
+   vtkSmartPointer<vtkMatrix4x4> matrix1 =
+       vtkSmartPointer<vtkMatrix4x4>::New();
 
-   vtkCollisionDetectionFilter *collide = vtkCollisionDetectionFilter::New();
+   vtkSmartPointer<vtkCollisionDetectionFilter> collide =
+       vtkSmartPointer<vtkCollisionDetectionFilter>::New();
    collide->SetInputConnection(0, sphere0->GetOutputPort());
    collide->SetMatrix(0, matrix0);
    collide->SetInputConnection(1, sphere1->GetOutputPort());
@@ -78,46 +84,61 @@ int TestCollisionDetection(int argc, char* argv[])
    collide->SetCollisionModeToAllContacts();
    collide->GenerateScalarsOn();
 
-   vtkPolyDataMapper *mapper1 = vtkPolyDataMapper::New();
+   vtkSmartPointer<vtkPolyDataMapper> mapper1 =
+       vtkSmartPointer<vtkPolyDataMapper>::New();
    mapper1->SetInputConnection(collide->GetOutputPort(0));
-   vtkActor *actor1 = vtkActor::New();
+
+   vtkSmartPointer<vtkActor> actor1 =
+       vtkSmartPointer<vtkActor>::New();
    actor1->SetMapper(mapper1);
    (actor1->GetProperty())->BackfaceCullingOn();
    actor1->SetUserMatrix(matrix0);
 
-   vtkPolyDataMapper *mapper2 = vtkPolyDataMapper::New();
+   vtkSmartPointer<vtkPolyDataMapper> mapper2 =
+       vtkSmartPointer<vtkPolyDataMapper>::New();
    mapper2->SetInputConnection(collide->GetOutputPort(1));
-   vtkActor *actor2 = vtkActor::New();
+
+   vtkSmartPointer<vtkActor> actor2 =
+       vtkSmartPointer<vtkActor>::New();
    actor2->SetMapper(mapper2);
    (actor2->GetProperty())->BackfaceCullingOn();
    actor2->SetUserMatrix(matrix1);
 
-   vtkPolyDataMapper *mapper3 = vtkPolyDataMapper::New();
+   vtkSmartPointer<vtkPolyDataMapper> mapper3 =
+       vtkSmartPointer<vtkPolyDataMapper>::New();
    mapper3->SetInputConnection(collide->GetContactsOutputPort());
    mapper3->SetResolveCoincidentTopologyToPolygonOffset();
-   vtkActor *actor3 = vtkActor::New();
+
+   vtkSmartPointer<vtkActor> actor3 =
+       vtkSmartPointer<vtkActor>::New();
    actor3->SetMapper(mapper3);
    (actor3->GetProperty())->SetColor(0,0,0);
    (actor3->GetProperty())->SetLineWidth(3.0);
 
-   vtkTextActor *txt = vtkTextActor::New();
+   vtkSmartPointer<vtkTextActor> txt =
+       vtkSmartPointer<vtkTextActor>::New();
 
-   vtkRenderer *ren = vtkRenderer::New();
+   vtkSmartPointer<vtkRenderer> ren =
+       vtkSmartPointer<vtkRenderer>::New();
    ren->AddActor(actor1);
    ren->AddActor(actor2);
    ren->AddActor(actor3);
    ren->AddActor(txt);
    ren->SetBackground(0.5,0.5,0.5);
 
-   vtkRenderWindow *renWin = vtkRenderWindow::New();
+   vtkSmartPointer<vtkRenderWindow> renWin =
+       vtkSmartPointer<vtkRenderWindow>::New();
    renWin->AddRenderer(ren);
 
-   vtkInteractorStyleJoystickActor *istyle = vtkInteractorStyleJoystickActor::New();
-   vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::New();
+   vtkSmartPointer<vtkInteractorStyleJoystickActor> istyle =
+       vtkInteractorStyleJoystickActor::New();
+   vtkSmartPointer<vtkRenderWindowInteractor> iren =
+       vtkSmartPointer<vtkRenderWindowInteractor>::New();
    iren->SetRenderWindow(renWin);
    iren->SetInteractorStyle(istyle);
 
-   vtkCollisionCallback *cbCollide = vtkCollisionCallback::New();
+   vtkSmartPointer<vtkCollisionCallback> cbCollide =
+       vtkSmartPointer<vtkCollisionCallback>::New();
    cbCollide->SetTextActor(txt);
    cbCollide->SetRenderWindow(renWin);
    collide->AddObserver(vtkCommand::EndEvent, cbCollide);
@@ -132,26 +153,5 @@ int TestCollisionDetection(int argc, char* argv[])
     }
 
   return !retVal;
-
-   sphere0->Delete();
-   sphere1->Delete();
-   matrix0->Delete();
-   matrix1->Delete();
-   collide->Delete();
-   mapper1->Delete();
-   mapper2->Delete();
-   mapper3->Delete();
-   actor1->Delete();
-   actor2->Delete();
-   actor3->Delete();
-   txt->Delete();
-   ren->Delete();
-   cbCollide->Delete();
-   renWin->Delete();
-   istyle->Delete();
-   iren->Delete();
-
-
-
 
 }
