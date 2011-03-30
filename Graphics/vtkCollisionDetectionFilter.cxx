@@ -60,7 +60,9 @@ vtkCollisionDetectionFilter::vtkCollisionDetectionFilter()
   this->NumberOfBoxTests = 0;
   this->BoxTolerance = 0.0;
   this->CellTolerance = 0.0;
-  this->NumberOfCellsPerNode = 2;
+  // More efficient to set CellsPerNode to 1 and remove
+  // box test code in this class.
+  this->NumberOfCellsPerNode = 1;
   this->tree0 = vtkOBBTree::New();
   this->tree1 = vtkOBBTree::New();
   this->GenerateScalars = 0;
@@ -608,9 +610,9 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
                                             double bounds2[6], double tol2,
                                             double x1[3], double x2[3], int CollisionMode)
 {
-  double n[3], n2[3], coords[3];
+  double n[3], n2[3];// coords[3];
   int i, j;
-  double *p1, *p2, *q1, ray[3], ray2[3];
+  double *p1, *p2, *q1, ray2[3];// ray[3];
   double t,u,v;
   double *x[2];
   int Num = 0;
@@ -627,28 +629,24 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
     p1 = pts + 3*i;
     p2 = pts + 3*((i+1)%npts);
 
-    for (j=0; j<3; j++)
-      {
-      ray[j] = p2[j] - p1[j];
-      }
+    //for (j=0; j<3; j++)
+    //  {
+    //  ray[j] = p2[j] - p1[j];
+    //  }
 
     // if the edge (ray) of the 1st polygon doesn't hit the bounding box
     // of the 2nd polygon - move on to next edge.
-    if ( ! vtkBox::IntersectBox(bounds2, p1, ray, coords, t) )
-      {
-      continue;
-      }
+    //if ( ! vtkBox::IntersectBox(bounds2, p1, ray, coords, t) )
+    //  {
+    //  continue;
+    //  }
 
     // test if edge hits the infinite plane in which the 2nd polygon lies
     if ( (vtkPlane::IntersectWithLine(p1,p2,n2,pts2,t,x[Num])) == 1 ) 
       {
       // test if the point of intersection with infinite plane is inside
       // 2nd polygon... is so we have an intersection.
-      if ( (npts2==3
-            && vtkTriangle::PointInTriangle(x[Num],pts2,pts2+3,pts2+6,tol2))
-           || (npts2>3
-               && vtkPolygon::PointInPolygon(x[Num],npts2,pts2,bounds2,n2)
-               == 1))
+      if (vtkTriangle::PointInTriangle(x[Num],pts2,pts2+3,pts2+6,tol2))
         {
         Num++;
         // it's possible that 2 edges pass through the 2nd polygon. Check if
@@ -718,21 +716,19 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
     p1 = pts2 + 3*i;
     p2 = pts2 + 3*((i+1)%npts2);
 
-    for (j=0; j<3; j++)
-      {
-      ray[j] = p2[j] - p1[j];
-      }
+    //for (j=0; j<3; j++)
+    //  {
+    //  ray[j] = p2[j] - p1[j];
+    //  }
 
-    if ( ! vtkBox::IntersectBox(bounds, p1, ray, coords, t) )
-      {
-      continue;
-      }
+    //if ( ! vtkBox::IntersectBox(bounds, p1, ray, coords, t) )
+    //  {
+    //  continue;
+    //  }
 
     if ( (vtkPlane::IntersectWithLine(p1,p2,n,pts,t,x[Num])) == 1 ) 
       {
-      if ( (npts==3 && vtkTriangle::PointInTriangle(x[Num],pts,pts+3,pts+6,tol2))
-        || (npts>3 && vtkPolygon::PointInPolygon(x[Num],npts,pts,bounds,n)
-               == 1))
+      if (vtkTriangle::PointInTriangle(x[Num],pts,pts+3,pts+6,tol2))
         {
         Num++;
         if (CollisionMode != vtkCollisionDetectionFilter::VTK_ALL_CONTACTS ||

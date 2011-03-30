@@ -15,6 +15,7 @@
 #include "vtkTestUtilities.h"
 #include "vtkRegressionTestImage.h"
 #include "vtkSmartPointer.h"
+#include "vtkTimerLog.h"
 #include <ostream>
 
 
@@ -80,7 +81,7 @@ int TestCollisionDetection(int argc, char* argv[])
    collide->SetMatrix(1, matrix1);
    collide->SetBoxTolerance(0.0);
    collide->SetCellTolerance(0.0);
-   collide->SetNumberOfCellsPerNode(2);
+   collide->SetNumberOfCellsPerNode(1);
    collide->SetCollisionModeToAllContacts();
    collide->GenerateScalarsOn();
 
@@ -144,6 +145,22 @@ int TestCollisionDetection(int argc, char* argv[])
    collide->AddObserver(vtkCommand::EndEvent, cbCollide);
 
    renWin->Render();
+
+   vtkSmartPointer<vtkTimerLog> timer = 
+       vtkSmartPointer<vtkTimerLog>::New();
+
+   double agg_time = 0.0;
+   int iters = 200;
+   for (int i = 0; i<iters; i++)
+    {
+    timer->StartTimer();
+    collide->Modified();
+    collide->Update();
+    timer->StopTimer();
+    agg_time += timer->GetElapsedTime();
+    }
+
+   cout << "Mean Time: " << agg_time/iters << "s" << endl;
 
  
   int retVal = vtkRegressionTestImage( renWin );
