@@ -619,6 +619,7 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
   x[0] = x1;
   x[1] = x2;
 
+
   //  Intersect each edge of first polygon against second polygon
   vtkPolygon::ComputeNormal(npts2, pts2, n2);
   vtkPolygon::ComputeNormal(npts, pts, n);
@@ -708,6 +709,7 @@ int vtkCollisionDetectionFilter::IntersectPolygonWithPolygon(int npts, double *p
        
   //  We've checked if the first polygon has intersecting edges and if the two
   //  polygons are overlapping now check if the 2nd polygon has
+
   //  Intersect each edge of second polygon against first
   //
 

@@ -161,7 +161,6 @@ int TestCollisionDetection(int argc, char* argv[])
     }
 
    cout << "Mean Time: " << agg_time/iters << "s" << endl;
-
  
   int retVal = vtkRegressionTestImage( renWin );
   if ( retVal == vtkRegressionTester::DO_INTERACTOR)
