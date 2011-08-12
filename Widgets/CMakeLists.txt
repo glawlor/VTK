@@ -52,6 +52,7 @@ vtkContourWidget.cxx
 vtkCheckerboardRepresentation.cxx
 vtkCheckerboardWidget.cxx
 vtkConstrainedPointHandleRepresentation.cxx
+vtkCylinderWidget.cxx
 vtkDijkstraImageContourLineInterpolator.cxx
 vtkDistanceWidget.cxx
 vtkDistanceRepresentation.cxx
